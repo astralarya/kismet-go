@@ -26,7 +26,7 @@ type numstring struct {
 %type	<word>	word
 
 %left AND OR
-%right NOT
+%right NOT DIE
 %left EQ NE LT GT LE GE
 %nonassoc '(' ')'
 
@@ -37,7 +37,7 @@ type numstring struct {
 %%
 
 top:
-	directive
+	word
 	{
 		querylex.(*queryLex).Out.Query = $1
 	}
@@ -92,8 +92,8 @@ func (x *queryLex) Lex(yylval *querySymType) int {
 			return LE
 		case '≥':
 			return GE
-
-
+		case 'd', 'D':
+			return x.die(c, yyval)
 		default:
 			if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' {
 				return x.word(c, yylval)
@@ -170,7 +170,6 @@ func (x *queryLex) num(c rune, yylval *querySymType) int {
 func (x *queryLex) word(c rune, yylval *querySymType) int {
 	var b bytes.Buffer
 	x.add(&b, c)
-	state := 0
 	L: for {
 		c = x.next()
 		switch c {
@@ -187,6 +186,18 @@ func (x *queryLex) word(c rune, yylval *querySymType) int {
 	x.unpeek(c)
 	yylval.word = strings.ToLower(b.String())
 	return WORD
+}
+
+// Lex an operator.
+func (x *queryLex) die(c rune, yylval *querySymType) int {
+	var b bytes.Buffer
+	state := c
+	x.add(&b, c)
+	c = x.next()
+	if unicode.IsSpace(c) || unicode.IsLetter(c) {
+		x.unpeek(c);
+		return x.word(state, yylval)
+	}
 }
 
 // Lex an operator.

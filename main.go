@@ -1,5 +1,8 @@
 package main
 
+//go:generate -command yacc go tool yacc
+//go:generate yacc -o kismet.go -p "kismet" kismet.y
+
 import (
 	"fmt"
 	"log"
