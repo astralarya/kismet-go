@@ -1,5 +1,5 @@
 # kismet
-Dice roll parser
+Dice roll parser, with personality!
 
 ## Installation
 
